@@ -1,0 +1,38 @@
+logging:
+  level:
+    root: error
+    com.example.bankbalanceexactlyonce: debug
+spring:
+  kafka:
+    bootstrap-servers:
+      - localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        linger.ms: 1
+        enable.idempotence: true
+      client-id: transaction-producer
+    streams:
+      application-id: transaction-update-stream
+      cache-max-size-buffering: 0
+      properties:
+        processing.guarantee: exactly_once
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        spring.json.trusted.packages: com.ahiel.bank.dto
+        spring.json.value.default.type: com.ahiel.bank.dto.BankBalance
+    consumer:
+      group-id: balance-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.ahiel.bank.dto
+---
+kafka:
+  topic:
+    bankTransaction: bank-transaction
+    bankBalance: bank-balance
